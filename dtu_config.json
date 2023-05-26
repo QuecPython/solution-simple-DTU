@@ -1,0 +1,23 @@
+{
+    "mqtt_private_cloud_config": {
+        "server": "mq.tongxinmao.com",
+        "port": 18830,
+        "client_id": "txm_1682300809",
+        "username": "",
+        "password": "",
+        "clean_session": true,
+        "qos": 0,
+        "keep_alive": 60,
+        "subscribe": ["/F79933DC83A4/connect_packet/adv_publish"],
+        "publish": ["/F79933DC83A4/connect_packet/adv_publish"]
+    },
+    "uart_config": {
+        "uart": 2,
+        "baudrate": 115200,
+        "databits": 8,
+        "parity": 0,
+        "stopbits": 1,
+        "flowctl": 0,
+        "rs485_direction_pin": ""
+    }
+}
