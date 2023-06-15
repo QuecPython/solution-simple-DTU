@@ -76,6 +76,3 @@ def ConfigureHandler(path):
         return JsonConfigureClass(path)
     else:
         raise TypeError('file format not supported!')
-
-
-config = ConfigureHandler('/usr/dtu_config.json')

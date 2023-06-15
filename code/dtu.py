@@ -2,7 +2,6 @@ import _thread
 from usr.serial import Serial
 from usr.mqttIot import MqttIot
 from usr.socketIot import SocketIot
-from usr.settings import config
 from usr.logging import getLogger
 
 
@@ -11,11 +10,13 @@ logger = getLogger(__name__)
 
 class DTU(object):
 
-    def __init__(self):
+    def __init__(self, config):
         self.serial = None
         self.cloud = None
+        self.config = config
+        self.setup(config)
 
-    def setup(self):
+    def setup(self, config):
         self.serial = Serial(**config.get('uart_config'))
 
         cloud_type = config.get('system_config.cloud')
