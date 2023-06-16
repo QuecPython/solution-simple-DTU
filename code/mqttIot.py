@@ -32,13 +32,17 @@ class MqttIot(object):
                 如果为False，则客户端是持久客户端，当客户端断开连接时，订阅信息和排队消息将被保留。默认为True。
             qos - MQTT消息服务质量（默认0，可选择0或1）.
                 整数类型 0：发送者只发送一次消息，不进行重试 1：发送者最少发送一次消息，确保消息到达Broker。
+            subscribe_topic - 订阅主题。
+            publish_topic - 发布主题。
             queue - MQTT下行数据透传队列。
+            error_trans - 串口吐异常信息(开启True，关闭False，默认False)
         """
         self.clean_session = kwargs.pop('clean_session', True)
         self.qos = kwargs.pop('qos', 0)
         self.subscribe_topic = kwargs.pop('subscribe_topic', '/public/test')
         self.publish_topic = kwargs.pop('publish_topic', '/public/test')
         self.queue = kwargs.pop('queue')
+        self.error_trans = kwargs.pop('error_trans', False)
 
         kwargs.setdefault('reconn', False)  # 禁用内部重连机制
         self.cli = MQTTClient(*args, **kwargs)
@@ -52,7 +56,8 @@ class MqttIot(object):
         self.queue.put((topic, data))
 
     def put_error(self, e):
-        self.queue.put((None, str(e)))
+        if self.error_trans:
+            self.queue.put((None, str(e)))
 
     def connect(self):
 

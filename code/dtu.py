@@ -29,7 +29,8 @@ class DTU(object):
                 qos=mqtt_config['qos'],
                 subscribe_topic=mqtt_config['subscribe'],
                 publish_topic=mqtt_config['publish'],
-                queue=self.queue
+                queue=self.queue,
+                error_trans=False
             )
         elif cloud_type == "tcp":
             socket_config = config.get('socket_private_cloud_config')
@@ -38,7 +39,8 @@ class DTU(object):
                 keep_alive=socket_config['keep_alive'],
                 domain=socket_config['domain'],
                 port=socket_config['port'],
-                queue=self.queue
+                queue=self.queue,
+                error_trans=False
             )
 
     def run(self):

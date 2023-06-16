@@ -13,7 +13,7 @@ class SocketIot(object):
     """This class is tcp socket"""
     RECONNECT_WAIT_SECONDS = 20
 
-    def __init__(self, ip_type=None, protocol="TCP", keep_alive=None, domain=None, port=None, queue=None):
+    def __init__(self, ip_type=None, protocol="TCP", keep_alive=None, domain=None, port=None, queue=None, error_trans=False):
         super().__init__()
         if protocol == "TCP" or protocol is None:
             self.__protocol = "TCP"
@@ -34,6 +34,7 @@ class SocketIot(object):
         self.__init_addr()
         self.__init_socket()
         self.queue = queue
+        self.error_trans = error_trans
 
     def __init_addr(self):
         if self.__domain is not None:
@@ -158,4 +159,5 @@ class SocketIot(object):
         return self.queue.get()
 
     def put_error(self, e):
-        self.queue.put((None, str(e)))
+        if self.error_trans:
+            self.queue.put((None, str(e)))
