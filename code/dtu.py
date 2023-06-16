@@ -42,10 +42,10 @@ class DTU(object):
             )
 
     def run(self):
-        # 初始化云对象
-        self.cloud.init()
         # 启动下行数据处理线程
         self.down_transaction()
+        # 初始化云对象
+        self.cloud.init()
         # 启动上行数据处理线程
         self.up_transaction()
 
