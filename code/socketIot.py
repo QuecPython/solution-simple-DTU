@@ -2,7 +2,8 @@ import usys
 import utime
 import _thread
 import usocket
-from queue import Queue
+import checkNet
+from usr import error
 from usr.logging import getLogger
 
 logger = getLogger(__name__)
@@ -10,8 +11,9 @@ logger = getLogger(__name__)
 
 class SocketIot(object):
     """This class is tcp socket"""
+    RECONNECT_WAIT_SECONDS = 20
 
-    def __init__(self, ip_type=None, protocol="TCP", keep_alive=None, domain=None, port=None):
+    def __init__(self, ip_type=None, protocol="TCP", keep_alive=None, domain=None, port=None, queue=None):
         super().__init__()
         if protocol == "TCP" or protocol is None:
             self.__protocol = "TCP"
@@ -31,7 +33,7 @@ class SocketIot(object):
         self.__listen_thread_id = None
         self.__init_addr()
         self.__init_socket()
-        self.queue = Queue()
+        self.queue = queue
 
     def __init_addr(self):
         if self.__domain is not None:
@@ -65,78 +67,60 @@ class SocketIot(object):
                 return True
             except Exception as e:
                 usys.print_exception(e)
+                return False
 
         return False
 
-    def __disconnect(self):
-        if self.__socket is not None:
-            try:
-                self.__socket.close()
-                self.__socket = None
-                return True
-            except Exception as e:
-                usys.print_exception(e)
-                return False
-        else:
-            return True
-
     def recv_thread_worker(self):
-        """Read data by socket.
-        """
+        """Read data by socket."""
         while True:
-            data = b""
             try:
-                if self.__socket is not None:
-                    data = self.__socket.recv(1024)
+                data = self.__socket.recv(1024)
             except Exception as e:
-                if e.args[0] != 110:
-                    logger.error("%s read failed. error: %s" % (self.__protocol, str(e)))
-                    break
+                logger.error('tcp listen error.')
+                self.put_error(error.ListenError())
+                self.__socket.close()
+                self.connect()
+                continue
             else:
-                if data != b"":
-                    try:
-                        self.queue.put((None, data))
-                    except Exception as e:
-                        logger.error("{}".format(e))
+                self.queue.put((None, data))
             utime.sleep_ms(50)
+
+    def init(self):
+        self.connect()
+        self.listen()
 
     def listen(self):
         self.__listen_thread_id = _thread.start_new_thread(self.recv_thread_worker, ())
 
-    def init(self, enforce=False):
-        if enforce is False:
-            if self.get_status() == 0:
-                return True
-        if self.__socket is not None:
-            try:
-                self.__disconnect()
-            except Exception as e:
-                logger.error("tcp disconnect falied. %s" % e)
-            try:
-                if self.__listen_thread_id is not None:
-                    _thread.stop_thread(self.__listen_thread_id)
-            except Exception as e:
-                logger.error("stop listen thread falied. %s" % e)
+    def connect(self):
 
-        # FIX: when connect failed we return False instead of raise Exception for another try(self.init when post data.)
-        if not self.__connect():
-            return False
+        while True:
+            # 检查注网和拨号
+            stage, state = checkNet.waitNetworkReady(self.RECONNECT_WAIT_SECONDS)
+            if stage != 3 or state != 1:
+                self.put_error(error.NetworkError())
+                logger.error('network status error. stage is {}, state is {}'.format(stage, state))
+                continue
 
-        if self.__keep_alive != 0:
-            try:
-                self.__socket.setsockopt(usocket.SOL_SOCKET, usocket.TCP_KEEPALIVE, self.__keep_alive)
-            except Exception as e:
-                self.__socket.close()
-                logger.error("socket option set error:", e)
-                raise Exception("socket option set error")
-        self.__socket.settimeout(self.__timeout)
-        # Start receive socket data
-        self.listen()
-        logger.debug("self.get_status(): %s" % self.get_status())
-        if self.get_status() == 0:
-            return True
-        else:
-            return False
+            if not self.__connect():
+                logger.error('tcp connect error.')
+                self.put_error(error.ConnectError())
+                utime.sleep(self.RECONNECT_WAIT_SECONDS)
+                continue
+
+            if self.__keep_alive != 0:
+                try:
+                    self.__socket.setsockopt(usocket.SOL_SOCKET, usocket.TCP_KEEPALIVE, self.__keep_alive)
+                except Exception as e:
+                    logger.error("socket option set error: {}".format(e))
+                    self.put_error(error.SetSocketOptError())
+                    self.__socket.close()
+                    continue
+
+            self.__socket.settimeout(self.__timeout)
+            logger.info('tcp connect successfully!')
+            break
 
     def get_status(self):
         _status = -1
@@ -172,3 +156,6 @@ class SocketIot(object):
 
     def recv(self):
         return self.queue.get()
+
+    def put_error(self, e):
+        self.queue.put((None, str(e)))

@@ -1,3 +1,4 @@
+import _thread
 from usr.dtu import DTU
 from usr.settings import ConfigureHandler
 
@@ -12,4 +13,4 @@ app = create_app('/usr/dtu_config.json')
 
 
 if __name__ == '__main__':
-    app.run()
+    _thread.start_new_thread(app.run, ())

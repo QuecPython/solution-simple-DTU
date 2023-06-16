@@ -2,11 +2,17 @@
 MQTT客户端抽象类
 """
 import _thread
-from queue import Queue
+import utime
+import checkNet
 from umqtt import MQTTClient
+from usr import error
+from usr.logging import getLogger
+
+logger = getLogger(__name__)
 
 
 class MqttIot(object):
+    RECONNECT_WAIT_SECONDS = 20
 
     def __init__(self, *args, **kwargs):
         """init umqtt.MQTTClient instance.
@@ -26,47 +32,76 @@ class MqttIot(object):
                 如果为False，则客户端是持久客户端，当客户端断开连接时，订阅信息和排队消息将被保留。默认为True。
             qos - MQTT消息服务质量（默认0，可选择0或1）.
                 整数类型 0：发送者只发送一次消息，不进行重试 1：发送者最少发送一次消息，确保消息到达Broker。
+            queue - MQTT下行数据透传队列。
         """
         self.clean_session = kwargs.pop('clean_session', True)
         self.qos = kwargs.pop('qos', 0)
         self.subscribe_topic = kwargs.pop('subscribe_topic', '/public/test')
         self.publish_topic = kwargs.pop('publish_topic', '/public/test')
-        self.queue = Queue()
+        self.queue = kwargs.pop('queue')
 
+        kwargs.setdefault('reconn', False)  # 禁用内部重连机制
         self.cli = MQTTClient(*args, **kwargs)
-        self.cli.set_callback(self.__callback)
-
-    def __callback(self, topic, data):
-        self.queue.put((topic, data))
 
     def init(self):
-        try:
-            self.cli.connect(clean_session=self.clean_session)
-            self.cli.subscribe(self.subscribe_topic, qos=self.qos)
-        except Exception as e:
-            self.cli.close()
-            raise e
+        self.cli.set_callback(self.callback)
+        self.connect()
+        self.listen()
 
-        _thread.start_new_thread(self.listen, ())
+    def callback(self, topic, data):
+        self.queue.put((topic, data))
 
-    def disconnect(self):
-        self.cli.disconnect()
+    def put_error(self, e):
+        self.queue.put((None, str(e)))
 
-    def close(self):
-        self.cli.close()
+    def connect(self):
 
-    def is_stat_ok(self):
-        return self.cli.get_mqttsta() == 0
+        while True:
+            # 检查注网和拨号
+            stage, state = checkNet.waitNetworkReady(self.RECONNECT_WAIT_SECONDS)
+            if stage != 3 or state != 1:
+                self.put_error(error.NetworkError())
+                logger.error('network status error. stage is {}, state is {}'.format(stage, state))
+                continue
+
+            # 重连
+            try:
+                self.cli.connect()
+            except Exception as e:
+                logger.error('mqtt connect failed. {}'.format(str(e)))
+                self.put_error(error.ConnectError())
+                utime.sleep(self.RECONNECT_WAIT_SECONDS)
+                continue
+
+            # 订阅
+            try:
+                self.cli.subscribe(self.subscribe_topic, self.qos)
+            except Exception as e:
+                logger.error('mqtt subscribe failed. {}'.format(str(e)))
+                self.put_error(error.SubscribeError())
+                utime.sleep(self.RECONNECT_WAIT_SECONDS)
+                continue
+
+            logger.info('mqtt connect successfully!')
+            break
 
     def listen(self):
+        _thread.start_new_thread(self.listen_thread_worker, ())
+
+    def listen_thread_worker(self):
         while True:
-            self.cli.wait_msg()
+            try:
+                self.cli.wait_msg()
+            except Exception as e:
+                logger.error('mqtt listen error continue to reconnect. {}'.format(str(e)))
+                self.put_error(error.ListenError())
+                self.cli.close()
+                self.connect()
 
     def recv(self):
         return self.queue.get()
 
     def send(self, data):
-        self.cli.publish(
-            self.publish_topic,
-            data
-        )
+        if not self.cli.publish(self.publish_topic, data):
+            logger.error('publish failed.')
+            self.put_error(error.PublishError())

@@ -1,4 +1,5 @@
 import _thread
+from queue import Queue
 from usr.serial import Serial
 from usr.mqttIot import MqttIot
 from usr.socketIot import SocketIot
@@ -11,12 +12,7 @@ logger = getLogger(__name__)
 class DTU(object):
 
     def __init__(self, config):
-        self.serial = None
-        self.cloud = None
-        self.config = config
-        self.setup(config)
-
-    def setup(self, config):
+        self.queue = Queue()  # DTU应用与MQTT、TCP客户端下行数据交互队列
         self.serial = Serial(**config.get('uart_config'))
 
         cloud_type = config.get('system_config.cloud')
@@ -32,7 +28,8 @@ class DTU(object):
                 clean_session=mqtt_config['clean_session'],
                 qos=mqtt_config['qos'],
                 subscribe_topic=mqtt_config['subscribe'],
-                publish_topic=mqtt_config['publish']
+                publish_topic=mqtt_config['publish'],
+                queue=self.queue
             )
         elif cloud_type == "tcp":
             socket_config = config.get('socket_private_cloud_config')
@@ -40,17 +37,19 @@ class DTU(object):
                 ip_type=socket_config['ip_type'],
                 keep_alive=socket_config['keep_alive'],
                 domain=socket_config['domain'],
-                port=socket_config['port']
+                port=socket_config['port'],
+                queue=self.queue
             )
 
     def run(self):
+        # 初始化云对象
         self.cloud.init()
         # 启动下行数据处理线程
-        self.__down_transaction()
+        self.down_transaction()
         # 启动上行数据处理线程
-        self.__up_transaction()
+        self.up_transaction()
 
-    def __down_transaction(self):
+    def down_transaction(self):
         logger.info('start down transaction worker thread {}.'.format(_thread.get_ident()))
         _thread.start_new_thread(self.down_transaction_handler, ())
 
@@ -60,7 +59,7 @@ class DTU(object):
             logger.info('down transfer msg: {}'.format(data))
             self.serial.write(data)
 
-    def __up_transaction(self):
+    def up_transaction(self):
         logger.info('start up transaction worker thread {}.'.format(_thread.get_ident()))
         _thread.start_new_thread(self.up_transaction_handler, ())
 
