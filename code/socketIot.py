@@ -145,15 +145,11 @@ class SocketIot(object):
         return _status
 
     def send(self, data):
-        if self.__socket is not None:
-            try:
-                write_data_num = self.__socket.write(data)
-                if write_data_num == len(data):
-                    return True
-            except Exception as e:
-                usys.print_exception(e)
-
-        return False
+        try:
+            self.__socket.write(data)
+        except Exception as e:
+            logger.error('tcp socket send error: {}'.format(str(e)))
+            self.put_error(error.TCPSendError())
 
     def recv(self):
         return self.queue.get()

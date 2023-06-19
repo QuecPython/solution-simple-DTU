@@ -40,3 +40,8 @@ class NetworkError(Error):
 class SetSocketOptError(Error):
     code = 0x06
     desc = 'set socket option error.'
+
+
+class TCPSendError(Error):
+    code = 0x07
+    desc = 'tcp send data error.'

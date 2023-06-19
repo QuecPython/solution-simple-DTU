@@ -30,7 +30,7 @@ class DTU(object):
                 subscribe_topic=mqtt_config['subscribe'],
                 publish_topic=mqtt_config['publish'],
                 queue=self.queue,
-                error_trans=False
+                error_trans=True
             )
         elif cloud_type == "tcp":
             socket_config = config.get('socket_private_cloud_config')
@@ -40,16 +40,16 @@ class DTU(object):
                 domain=socket_config['domain'],
                 port=socket_config['port'],
                 queue=self.queue,
-                error_trans=False
+                error_trans=True
             )
 
     def run(self):
-        # 启动下行数据处理线程
-        self.down_transaction()
         # 初始化云对象
         self.cloud.init()
         # 启动上行数据处理线程
         self.up_transaction()
+        # 启动下行数据处理线程
+        self.down_transaction()
 
     def down_transaction(self):
         logger.info('start down transaction worker thread {}.'.format(_thread.get_ident()))
