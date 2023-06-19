@@ -8,7 +8,7 @@ SimpleDTU是一款简单的数据传输单元，支持TCP和MQTT数据纯透传�
 
 本文档旨在指导用户如何基于我司的QuecPython开发板进行SimpleDTU功能开发。
 
-## 三、功能列表
+## 二、功能列表
 
 | 功能     | 备注       |
 | -------- | ---------- |
@@ -16,7 +16,7 @@ SimpleDTU是一款简单的数据传输单元，支持TCP和MQTT数据纯透传�
 | MQTT透传 | 单主题透传 |
 | 参数配置 | ——         |
 
-## 四、应用指导
+## 三、应用指导
 
 ### 1、准备工作
 
@@ -170,7 +170,7 @@ DTU下行数据日志。
 
 ![](./images/qcom_down.png)
 
-## 五、开发指导
+## 四、开发指导
 
 ### 1、概述
 
@@ -251,7 +251,7 @@ if __name__ == '__main__':
 | 0x06   | set socket option error. |
 | 0x07   | tcp send data error.     |
 
-## 六、文档汇总
+## 五、文档汇总
 
 | 文档描述                                  | 链接                                                         |
 | ----------------------------------------- | ------------------------------------------------------------ |
@@ -262,7 +262,7 @@ if __name__ == '__main__':
 | EC2X开发板介绍                            | https://python.quectel.com/doc/Quick_start/zh/EC2X_BOARD.html |
 | EC200U-CN模组介绍                         | https://python.quectel.com/products/ec200u-cn                |
 
-## 七、常见问题
+## 六、常见问题
 
 1、串口通信问题。
 
