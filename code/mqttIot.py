@@ -7,6 +7,7 @@ import checkNet
 from umqtt import MQTTClient
 from usr import error
 from usr.logging import getLogger
+from usr.net_manager import NetManager
 
 logger = getLogger(__name__)
 
@@ -63,10 +64,8 @@ class MqttIot(object):
 
         while True:
             # 检查注网和拨号
-            stage, state = checkNet.waitNetworkReady(self.RECONNECT_WAIT_SECONDS)
-            if stage != 3 or state != 1:
-                self.put_error(error.NetworkError())
-                logger.error('network status error. stage is {}, state is {}'.format(stage, state))
+            if not NetManager.check_and_reconnect():
+                logger.error('network status error.')
                 continue
 
             # 重连
@@ -107,6 +106,10 @@ class MqttIot(object):
         return self.queue.get()
 
     def send(self, data):
-        if not self.cli.publish(self.publish_topic, data):
-            logger.error('publish failed.')
-            self.put_error(error.PublishError())
+        try:
+            if not self.cli.publish(self.publish_topic, data):
+                logger.error('publish failed.')
+                self.put_error(error.PublishError())
+        except Exception as e:
+            logger.error('publish failed with error: {}, prepare to check network.'.format(e))
+            NetManager.check_and_reconnect()

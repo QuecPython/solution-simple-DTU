@@ -5,6 +5,8 @@ import usocket
 import checkNet
 from usr import error
 from usr.logging import getLogger
+from usr.net_manager import NetManager
+
 
 logger = getLogger(__name__)
 
@@ -98,10 +100,8 @@ class SocketIot(object):
 
         while True:
             # 检查注网和拨号
-            stage, state = checkNet.waitNetworkReady(self.RECONNECT_WAIT_SECONDS)
-            if stage != 3 or state != 1:
-                self.put_error(error.NetworkError())
-                logger.error('network status error. stage is {}, state is {}'.format(stage, state))
+            if not NetManager.check_and_reconnect():
+                logger.error('network status error.')
                 continue
 
             if not self.__connect():
@@ -148,8 +148,9 @@ class SocketIot(object):
         try:
             self.__socket.write(data)
         except Exception as e:
-            logger.error('tcp socket send error: {}'.format(str(e)))
+            logger.error('tcp socket send error: {}, repare to check network.'.format(str(e)))
             self.put_error(error.TCPSendError())
+            NetManager.check_and_reconnect()
 
     def recv(self):
         return self.queue.get()
