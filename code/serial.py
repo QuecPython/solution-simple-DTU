@@ -19,7 +19,7 @@ class Serial(object):
         # init rs458 rx/tx pin
         if rs485_direction_pin != "":
             rs485_pin = getattr(UART, "GPIO%d" % int(rs485_direction_pin))
-            self._uart.control_485(rs485_pin, 1)
+            self._uart.control_485(rs485_pin, 0)
         self._queue = Queue(maxsize=1)
         self._timer = Timer(Timer.Timer1)
         self._log = getLogger(__name__)

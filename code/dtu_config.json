@@ -1,6 +1,6 @@
 {
     "system_config": {
-        "cloud": "mqtt"
+        "cloud": "tcp"
     },
     "mqtt_private_cloud_config": {
         "server": "mq.tongxinmao.com",
@@ -16,9 +16,9 @@
     },
     "socket_private_cloud_config": {
         "ip_type":"IPv4",
-        "domain": "120.76.100.197",
-        "port": "10002",
-        "keep_alive": 5
+        "domain": "47.113.147.169",
+        "port": "6666",
+        "keep_alive": 1
     },
     "uart_config": {
         "uart": 2,
@@ -27,6 +27,6 @@
         "parity": 0,
         "stopbits": 1,
         "flowctl": 0,
-        "rs485_direction_pin": ""
+        "rs485_direction_pin": "28"
     }
 }

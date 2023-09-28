@@ -80,7 +80,10 @@ class SocketIot(object):
             try:
                 data = self.__socket.recv(1024)
             except Exception as e:
-                logger.error('tcp listen error.')
+                if isinstance(e, OSError) and e.args[0] == 110:
+                    logger.debug('read timeout.')
+                    continue
+                logger.error('tcp listen error: {}'.format(e))
                 self.put_error(error.ListenError())
                 self.__socket.close()
                 self.connect()
