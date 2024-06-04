@@ -272,13 +272,13 @@ If an application error occurs, such as a network connection interruption causin
 >
 > - Check if QCOM has selected the correct port.
 > - Check if the wiring is correct: the module's RX connects to the TTL to USB device's TX, and the module's TX connects to the TTL to USB device's RX.
-> - Check if the QuecPython serial port number configured in the application code is correct. Refer to: `https://python.quectel.com/doc/API_reference/zh/QuecPython_classlib/machine.UART.html` for the UART list available for different modules.
+> - Check if the QuecPython serial port number configured in the application code is correct. Refer to: `https://python.quectel.com/doc/API_reference/zh/peripherals/machine.UART.html` for the UART list available for different modules.
 
 2. Network Issues
 
 > Q: Network connection error.
 >
-> A: You can determine it via the return value of the `waitNetworkReady` function in `checkNet`. For details on what the return value means, refer to: `https://python.quectel.com/doc/API_reference/zh/QuecPython_classlib/checkNet.html`
+> A: You can determine it via the return value of the `waitNetworkReady` function in `checkNet`. For details on what the return value means, refer to: `https://python.quectel.com/doc/API_reference/zh/iotlib/checkNet.html`
 
 3. MQTT Connection Issues
 

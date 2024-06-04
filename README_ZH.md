@@ -272,13 +272,13 @@ if __name__ == '__main__':
 >
 > - 检查QCOM是否选择正确的端口打开。
 > - 检查接线是否正确，模组RX接TTL转USB设备的TX，模组TX接TTL转USB设备的RX。
-> - 应用代码配置的QuecPython串口编号选择是否正确。参阅：`https://python.quectel.com/doc/API_reference/zh/QuecPython_classlib/machine.UART.html`中针对不同的模组，开放的UART列表 。
+> - 应用代码配置的QuecPython串口编号选择是否正确。参阅：`https://python.quectel.com/doc/API_reference/zh/peripherals/machine.UART.html`中针对不同的模组，开放的UART列表 。
 
 2、网络问题
 
 > Q: 连接网络异常。
 >
-> A：可以通过`checkNet`的`waitNetworkReady`函数返回值判定，返回值代表含义详情参阅：`https://python.quectel.com/doc/API_reference/zh/QuecPython_classlib/checkNet.html`
+> A：可以通过`checkNet`的`waitNetworkReady`函数返回值判定，返回值代表含义详情参阅：`https://python.quectel.com/doc/API_reference/zh/iotlib/checkNet.html`
 
 3、MQTT连接异常
 
