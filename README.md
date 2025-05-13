@@ -1,6 +1,6 @@
 # SimpleDTU Getting Started Guide
 
-[中文](./README_ZH.md) | English
+[中文](./README.zh.md) | English
 
 ## I. Overview
 
